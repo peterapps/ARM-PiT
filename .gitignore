@@ -1,0 +1,5 @@
+build/
+kernel.img
+kernel.list
+kernel.map
+LICENSE
