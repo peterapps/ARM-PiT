@@ -1,6 +1,6 @@
 /*
 Pi timer info:
-    - 
+    - 8 bytes of the current time at 0x20003000
 */
 
 .globl GetSystemTimerBase

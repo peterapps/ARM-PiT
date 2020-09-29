@@ -20,29 +20,42 @@ _start:
 main:
 	mov sp, #0x8000 @ Initialize stack at 0x8000
 
-	mov r0, #16 @ pinNum = 16
-	mov r1, #1 @ pinFunc = 1 (write, I think)
-	bl SetGpioFunction @ SetGpioFunction(16, 1)
+	mov r0,#1024
+	mov r1,#768
+	mov r2,#16
+	bl InitFrameBuffer @ Initialize frame buffer through GPU
 
-	ldr r4,=pattern @ Load address of pattern
-	ldr r4, [r4] @ Load pattern from memory
-	mov r5, #0 @ r5 is sequence position
+	teq r0, #0
+	bne noError$ @ if frame buffer returned successfully, goto noError
 
-loop$:
-	mov r0, #16 @ pinNum = 16
-	mov r1, #1 @ pinVal
-	lsl r1, r5 @ Shift to sequence position
-	and r1, r4 @ will be 0 if pattern[seq] is 0, else non-zero
-	bl SetGpio @ SetGpio(16, pinVal)
+	mov r0, #16
+	mov r1, #1
+	bl SetGpioFunction
+	mov r0, #16
+	mov r1, #0
+	bl SetGpio @ Turn on LED if there was an error
+error$:
+	b error$
 
-	mov r0, #0x3F0000
-	bl TimerWait
+noError$:
+	mov r4, r0 @ r4 = fbInfoAddr
 
-	b loop$
-
-.section .data
-@ .align N aligns data to a multiple of 2^N
-@ .int copies the constant into the output
-.align 2
-pattern:
-	.int 0b11111111101010100010001000101010
+render$:
+	@ r0 = color
+	ldr r3, [r0, #32] @ r3 = fbAddr
+	mov r1, #768 @ r1 = y = 768
+	drawRow$:
+		mov r2, #1024 @ r2 = x = 1024
+		drawPixel$:
+			strh r0, [r3] @ Store 16 bits of color at fbAddr
+			add r3, r3, #2 @ Increment fbAddr
+			sub r2, r2, #1 @ Decrement x
+			teq r2, #0
+			bne drawPixel$ @ Loop when x == 0
+		
+		sub r1, r1, #1 @ Decrement y
+		add r0, r0, #1 @ Increment color
+		teq r2, #0
+		bne drawRow$ @ Loop when y == 0
+	
+	b render$
