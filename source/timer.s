@@ -18,6 +18,7 @@ GetTimeStamp:
 .globl TimerWait
 TimerWait:
     push {lr}
+    push {r3, r4, r5}
     mov r3, r0 @ Target wait duration
     bl GetTimeStamp
     mov r4, r0 @ Start time
@@ -27,4 +28,5 @@ loop$:
     sub r5, r5, r4 @ Elapsed time
     cmp r4, r3
     ble loop$ @ Loop while elapsed time < wait duration
+    pop {r3, r4, r5}
     pop {pc}

@@ -20,23 +20,29 @@ _start:
 main:
 	mov sp, #0x8000 @ Initialize stack at 0x8000
 
-loop$:
 	mov r0, #16 @ pinNum = 16
 	mov r1, #1 @ pinFunc = 1 (write, I think)
 	bl SetGpioFunction @ SetGpioFunction(16, 1)
 
+	ldr r4,=pattern @ Load address of pattern
+	ldr r4, [r4] @ Load pattern from memory
+	mov r5, #0 @ r5 is sequence position
+
+loop$:
+	mov r0, #16 @ pinNum = 16
+	mov r1, #1 @ pinVal
+	lsl r1, r5 @ Shift to sequence position
+	and r1, r4 @ will be 0 if pattern[seq] is 0, else non-zero
+	bl SetGpio @ SetGpio(16, pinVal)
+
 	mov r0, #0x3F0000
 	bl TimerWait
-
-	mov r0, #16 @ pinNum = 16
-	mov r1, #0 @ pinVal = 0 (turn off pin/turn on LED)
-	bl SetGpio @ SetGpio(16, 0)
-
-	mov r0, #0x3F0000
-	bl TimerWait
-
-	mov r0, #16 @ pinNum = 16
-	mov r1, #1 @ pinVal = 1 (turn on pin/turn off LED)
-	bl SetGpio @ SetGpio(16, 1)
 
 	b loop$
+
+.section .data
+@ .align N aligns data to a multiple of 2^N
+@ .int copies the constant into the output
+.align 2
+pattern:
+	.int 0b11111111101010100010001000101010
