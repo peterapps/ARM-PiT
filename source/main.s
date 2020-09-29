@@ -25,26 +25,18 @@ loop$:
 	mov r1, #1 @ pinFunc = 1 (write, I think)
 	bl SetGpioFunction @ SetGpioFunction(16, 1)
 
-	bl WaitFunc @ wait
+	mov r0, #0x3F0000
+	bl TimerWait
 
 	mov r0, #16 @ pinNum = 16
 	mov r1, #0 @ pinVal = 0 (turn off pin/turn on LED)
 	bl SetGpio @ SetGpio(16, 0)
 
-	bl WaitFunc @ wait
+	mov r0, #0x3F0000
+	bl TimerWait
 
 	mov r0, #16 @ pinNum = 16
 	mov r1, #1 @ pinVal = 1 (turn on pin/turn off LED)
 	bl SetGpio @ SetGpio(16, 1)
 
 	b loop$
-
-WaitFunc:
-	push {r0} @ Save r0
-	mov r0, #0x3F0000 @ Initialize counter
-wait$:
-	sub r0, #1 @ Decrement counter
-	cmp r0, #0
-	bne wait$ @ if counter != 0: goto wait
-	pop {r0} @ Restore r0
-	mov pc, lr @ Return
